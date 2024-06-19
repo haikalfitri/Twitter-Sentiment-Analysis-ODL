@@ -33,7 +33,7 @@ twint.run.Search(c)
 ```
 This code sets the configuration options for the TWINT scraper, including the search term, language, and date range. The search is then executed using these configuration options, and the resulting tweets are saved in CSV files. This project involved scraping Twitter for tweets related to seven different keywords/topics - 'adaptation', 'distraction', 'equipment', 'internet', 'mental health', 'motivation', and 'time management'. I collected a total of around 100,000 tweets for this project.
 
-## Data Label
+## Topic Label
 After scraping tweets, I merged the datasets into a single dataset using Pandas' 'concat' function. First step is the datasets files are assign to dataframe.
 ```python
 #import necessary libraries
@@ -262,7 +262,7 @@ def tokenization(text):
 df['tokenization'] = df['remove_stopwords'].apply(lambda x: tokenization(x.lower()))
 df
 ```
-l) Lemmatization
+### l) Lemmatization
 To convert the words to the based form
 ```python
 #lemmatization
@@ -278,13 +278,117 @@ df['lemmatization'] = df['tokenization'].apply(lemmatize_words)
 df.tail()
 ```
 
+## Sentiment Labelling
 
+The tweets that are collected will be labelled into three classes: positive (+1), neutral (0), and negative (-1). The process will go through RapidMiner to generate sentiments score and label the polarity of the text. The parameter operator provides access to switch between the desired models used for the project: Vader and SentiWordNet.
 
+![image](https://github.com/haikalfitri/Twitter-Sentiment-Analysis-ODL/assets/105991397/8a1b36ea-9460-4823-ae08-06fa577f8bfe)
 
+## Modeling
+Three machine learning techniques were employed in this project: Naive Bayes (NB), Support Vector Machine (SVM), and Random Forest (RF). The labeled dataset was divided into training and testing datasets using split ratios of 80:20. The training dataset was used to train each machine learning model, while the testing dataset was used to evaluate their classification performance. The models were evaluated based on their ability to classify positive and negative sentiments. The Scikit-learn library in Python was utilized for modeling and evaluation.
 
+Splits the dataset into training and testing sets using a 80:20 ratio with stratification. Utilizes TF-IDF vectorization to convert text into numerical features for machine learning models, ensuring compatibility with Scikit-learn classifiers.
+```python
+# Splitting data into X (features) and y (target)
+X = new_df['preprocess_tweet']
+y = new_df['Label']
 
+# Importing necessary libraries
+from sklearn.model_selection import train_test_split 
+from sklearn.feature_extraction.text import TfidfVectorizer
 
+# Splitting data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=45, stratify=y)
 
+# Initializing and fitting the TfidfVectorizer
+vectorizer = TfidfVectorizer()
+X_train_vec = vectorizer.fit_transform(X_train.astype("U").str.lower())
+X_test_vec = vectorizer.transform(X_test.astype("U").str.lower())
+```
+This project employs three machine learning techniques to perform sentiment analysis on preprocessed text data:
+
+Multinomial Naive Bayes (NB): Trained and evaluated using the MultinomialNB classifier.
+Support Vector Machine (SVM): Implemented with the LinearSVC classifier.
+Random Forest (RF): Applied using the RandomForestClassifier.
+Each model is trained on TF-IDF transformed text data, split into training and testing sets with a ratio of 80:20. Model performance is evaluated using accuracy, confusion matrix, and classification report metrics. The Scikit-learn library in Python is used for implementation and evaluation.
+
+### a) NB
+```python
+    %%time
+    from sklearn.naive_bayes import MultinomialNB
+    mnb = MultinomialNB()
+
+    mnb.fit(X_train_vec, y_train)
+    #nb.fit(X_train_vec, y_train)
+
+    # make class predictions for X_test_vec
+    y_pred_class_mnb = mnb.predict(X_test_vec)
+
+    from sklearn import metrics
+
+    # calculate accuracy of class predictions
+    print('accuracy: %.4f' % metrics.accuracy_score(y_test, y_pred_class_mnb))
+
+    # confusion matrix
+    print('confusion matrix:')
+    print(metrics.confusion_matrix(y_test, y_pred_class_mnb))
+
+    # classification report
+    print('classification report:')
+    print(metrics.classification_report(y_test, y_pred_class_mnb,digits = 4))
+```
+
+### b) SVM
+```python
+%%time
+from sklearn.svm import LinearSVC
+lsvc = LinearSVC(random_state=45, tol=1e-5)
+
+#clf_sv = GridSearchCV(svcl, params)
+lsvc.fit(X_train_vec, y_train)
+
+# make class predictions for X_test_vec
+y_pred_class_lsvc = lsvc.predict(X_test_vec)
+
+from sklearn import metrics
+
+# calculate accuracy of class predictions
+print('accuracy: %.3f' % metrics.accuracy_score(y_test, y_pred_class_lsvc))
+
+# confusion matrix
+print('confusion matrix:')
+print(metrics.confusion_matrix(y_test, y_pred_class_lsvc))
+
+# classification report
+print('classification report:')
+print(metrics.classification_report(y_test, y_pred_class_lsvc,digits = 4))
+```
+
+### c) Random Forest
+```python
+%%time
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier(n_estimators=100, random_state=45)
+rf.fit(X_train_vec, y_train)
+
+# make class predictions for X_test_vec
+y_pred_class_rf = rf.predict(X_test_vec)
+
+from sklearn import metrics
+
+# calculate accuracy of class predictions
+print('accuracy: %.3f' % metrics.accuracy_score(y_test, y_pred_class_rf))
+
+# confusion matrix
+print('confusion matrix:')
+print(metrics.confusion_matrix(y_test, y_pred_class_rf))
+
+# classification report
+print('classification report:')
+print(metrics.classification_report(y_test, y_pred_class_rf,digits = 4))
+```
+Repeat the modeling process using different sentiment lexicons (e.g., SentiWordNet or VADER) and different train-test split ratios (80:20 and 60:40).
 
 
 
