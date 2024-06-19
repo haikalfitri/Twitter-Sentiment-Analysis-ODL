@@ -103,7 +103,7 @@ frames = [df_adaptation,df_distraction,df_equipment,df_internet,df_internet,df_m
 data_merged = pd.concat(frames, ignore_index=True);
 ```
 
-Next, filtered the dataset to include only the tweets that are in English language and save the file for the processing.
+Next, filtered the dataset to include only the tweets that are in English language and save the file for the data pre-processing.
 ```python
 #filter tweets in english only
 eng_only = data_merged.loc[data_merged['language']=="en"]
@@ -111,3 +111,188 @@ eng_only = data_merged.loc[data_merged['language']=="en"]
 #save file
 eng_only.to_csv('Labelled Dataset.csv', header=True)
 ```
+
+## Data Pre-Processing
+
+### Import Libraries
+```python
+import pandas as pd
+import numpy as np
+import re
+
+import matplotlib.pyplot as plt
+plt.style.use('fivethirtyeight')
+
+import nltk
+import contractions
+#import ssl
+from nltk.corpus import stopwords
+from nltk.corpus import wordnet
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import sentiwordnet as swn
+from nltk.tokenize import word_tokenize 
+#nltk.download('punkt')
+#nltk.download('sentiwordnet')
+#nltk.download('stopwords') 
+#nltk.download('wordnet')
+#nltk.download('omw-1.4')
+#nltk.download('averaged_perceptron_tagger')
+
+pd.set_option("display.max_colwidth", -1)
+pd.options.mode.chained_assignment = None  # default='warn'
+```
+
+### a) Remove Duplicate
+Remove the duplicate to prevent skewed analysis results.
+```python
+#removes duplicate rows based on the preprocess_tweet column
+df.drop_duplicates(subset = 'preprocess_tweet', keep = 'first', inplace = True)
+```
+### b) Expand Contractions
+Replacing shortened forms of words (like "can't" for "cannot" or "I've" for "I have") with their full forms in text data.
+```python
+#expand the contraction of text in tweets
+df['contraction'] = df['preprocess_tweet'].apply(lambda x: contractions.fix(x))
+df
+```
+### c) Lower Tweets
+Lowercasing the text to ensuring uniformity and simplify text comparisons
+```python
+#to transform all the text in the tweets to the lower case
+df['lower_tweet'] = df['contraction'].str.lower()
+df
+```
+
+### d) Remove Numbers
+Removing numbers as analysis focus on textual data rather than numerical value
+```python
+#to remove the number 
+def remove_num(text):
+    text = re.sub('[0-9]', '', text)
+    text = text.strip()
+    return text
+
+df['remove_num']= df['lower_tweet'].apply(lambda x:remove_num(x))
+df
+```
+#### e) Remove URLs
+To ensure URLs does not interfere with the analysis
+```python
+#to remove urls
+def remove_URL(text):
+    URL = re.compile(r'https?://\S+|www\.\S+')
+    return URL.sub(r'', text)
+
+
+df['remove_urls'] = df['remove_num'].apply(remove_URL)
+df
+```
+
+### f) Remove Hashtags
+To avoid tweets biasing based on topics or trends indicated by hashtags
+```python
+#to remove hashtags 
+def remove_Hashtag(text):
+    Hashtag = re.compile(r'#\S+|www\.\S+')
+    return Hashtag.sub(r'', text)
+df['remove_hashtags'] = df['remove_urls'].apply(remove_Hashtag)
+df
+```
+### g) Remove Mentions
+To excludes user handles from the text
+```python
+#to remove mentions from the tweets
+def remove_Mentions(text):
+    Mentions = re.compile(r'@[A-Za-z0-9._/]+')
+    return Mentions.sub(r'', text)
+
+df['remove_mentions'] = df['remove_hashtags'].apply(remove_Mentions)
+df
+```
+### h) Remove Emoji
+Eliminate graphical symbols or graphics from the texts
+```python
+#to remove emojis from the tweets
+filter_char = lambda c: ord(c) < 256
+df['remove_emoji'] = df['remove_mentions'].apply(lambda s: ''.join(filter(filter_char, s)))
+df
+```
+
+### i) Remove Punctuations
+Standardizing text representation and improving the accuracy
+```python
+# to remove the punctuations
+df['remove_punctuation'] = df['remove_emoji'].str.replace('[^\w\s]', '')
+df
+```
+
+### j) Remove Custom Stopword
+To exclude specific words or phrases that are deemed irrelevant to the analysis
+```python
+stopwords_nltk = stopwords.words('english')
+
+stopwords_nltk.append('even')
+stopwords_nltk.append('ever')
+stopwords_nltk.append('etc')
+stopwords_nltk.append('still')
+stopwords_nltk.append('say')
+stopwords_nltk.append('im')
+stopwords_nltk.append('tell')
+stopwords_nltk.append('us')
+stopwords_nltk.append('thats')
+not_stopwords_nltk = {'no','should', 'not','o','over','nor','very', 'did',"should've", "you've", 'does' 'not','t','can','against', 'do','don',"don't",'ain','aren',"aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't", }
+real_stopwords_nltk = set([word for word in stopwords_nltk if word not in not_stopwords_nltk])
+
+def stopwords(text):
+    return " ".join([word for word in str(text).split() if word not in real_stopwords_nltk])
+
+df["remove_stopwords"] = df["remove_punctuation"].apply(stopwords)
+df
+```
+
+### k) Tokenization
+Preparing text data for analysis
+```python
+#to tokenize
+
+def tokenization(text):
+    text = re.split('\W+', text)
+    return text
+
+df['tokenization'] = df['remove_stopwords'].apply(lambda x: tokenization(x.lower()))
+df
+```
+l) Lemmatization
+To convert the words to the based form
+```python
+#lemmatization
+
+lemmatizer = WordNetLemmatizer()
+wordnet_map = {"N":wordnet.NOUN, "V":wordnet.VERB, "J":wordnet.ADJ, "R":wordnet.ADV} 
+
+def lemmatize_words(text):
+    pos_tagged_text = nltk.pos_tag(text)
+    return " ".join([lemmatizer.lemmatize(word, wordnet_map.get(pos[0], wordnet.NOUN)) for word, pos in pos_tagged_text])
+
+df['lemmatization'] = df['tokenization'].apply(lemmatize_words)
+df.tail()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
