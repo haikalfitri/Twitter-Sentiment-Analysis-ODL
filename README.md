@@ -5,6 +5,8 @@ This project aims to analyze the sentiment of tweets related to Open Distance Le
 
 ## Problem Statement 
 - Manually analyzing large volumes of tweets related to ODL is time-consuming and impractical.
+- Assess public sentiment towards ODL to understand perceptions.
+- Determine the factors influencing public perceptions of ODL, i
 
 ## Project Scope
 - Tools: Jupyter Notebook, RapidMiner Studio, Microsoft Power Bi, TWINT
