@@ -1,10 +1,10 @@
 # Twitter Sentiment Analysis of Open Distance Learning
 This project aims to analyze the sentiment of tweets related to Open Distance Learning (ODL) using natural language processing techniques. The sentiment analysis was conducted on a large dataset of tweets related to ODL, using machine learning algorithms to classify the tweets as positive, negative, or neutral.
 
-To view the interactive dashboard, download [here]([https://muhdhaikalfiri.shinyapps.io/MonsterMovieAnalysisandPredictionApp/](https://github.com/haikalfitri/Twitter-Sentiment-Analysis-ODL/blob/main/Sentiment%20Analysis%20-%20ODL.pbix)).
+To view the interactive dashboard, download [here](https://github.com/haikalfitri/Twitter-Sentiment-Analysis-ODL/blob/main/Sentiment%20Analysis%20-%20ODL.pbix).
 
 <p align="center">
-  <img src="[https://github.com/haikalfitri/Monster-Movie-Analysis-and-Prediction-App-using-R/blob/main/asset/ss%20monster%20movie%20analysis.png](https://github.com/haikalfitri/Twitter-Sentiment-Analysis-ODL/blob/main/Asset/2nd%20project%20sentiment%20analysis.png)" alt="First Page" width="600" />
+  <img src="https://github.com/haikalfitri/Twitter-Sentiment-Analysis-ODL/blob/main/Asset/2nd%20project%20sentiment%20analysis.png" alt="First Page" width="600" />
 </p>
 <p align="center"><strong>Preview</strong></p>
 
